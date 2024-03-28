@@ -23,8 +23,8 @@ request_detail={
     'dymax': dymax,
     'dymin': dymin
 }
-test= True
-result_dir = "./result/test/evaluation/" #
+test= False
+result_dir = "./result/test_2/" #
 
 epochs= 2 #8
 if test :
