@@ -1,0 +1,64 @@
+version: "3.5"
+
+services:
+    proxyMn2:
+      image: huahsuan/nginx-proxy:mn2
+      depends_on:
+        - mn2
+      deploy:
+        replicas: 1
+        placement:
+          constraints:
+            - node.hostname == worker1
+        resources:
+          limits:
+            cpus: '1'
+      ports:
+        - target: 80
+          published: 8000
+          protocol: tcp
+          mode: host
+    mn2:
+      image: huahsuan/imageforscalablesystem:mn_2_server
+      deploy:
+        replicas: 1
+        placement:
+          constraints:
+            - node.hostname == worker1
+        resources:
+          limits:
+            cpus: '0.5'
+      environment:
+        - mn2Port=5500
+        - mn1Port= 5000   
+      ports:
+        - target: 5500
+          published: 5500
+          protocol: tcp
+          mode: host
+    mn1:
+      image: huahsuan/imageforscalablesystem:mn_1_server
+      depends_on: 
+        - mn2
+      deploy:
+        replicas: 1
+        placement:
+          constraints:
+            - node.hostname == worker
+        resources:
+          limits:
+            cpus: '0.5' 
+      environment:
+        - mn2Ip=192.168.99.103
+        - reportRate=0.2
+        - mn2Proxy=8000
+        - mn1Port=5000
+      ports:
+        - target: 5000
+          published: 5000
+          protocol: tcp
+          mode: host
+
+    
+        
+    
