@@ -71,10 +71,10 @@ class agent():
         act, act_param, all_action_parameters, if_epsilon = self.model.act(np.array(self.state, dtype=np.float32))
         
         a=[act, act_param, all_action_parameters, if_epsilon]
-        action = self.pad_action(act, act_param)
+        # action = self.pad_action(act, act_param)
         self.action=a
         print('act')
-        return action
+        return act,act_param
     def store_trajectory(self, step, s, a_r, a_c, r, r_perf, r_res, s_, done, if_epsilon):
         path = self.result_dir + self.service_name + "_trajectory.txt"
         tmp_s = list(s)

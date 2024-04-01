@@ -25,8 +25,15 @@ if __name__ =='__main__':
         # reset env
         mn1.reset(ini_replica1,ini_cpus1)
         mn2.reset(ini_replica2,ini_cpus2)
+        # make the scaling process pipline to increate the efficiency 
+        mn1reset=threading.Thread(target=mn1.reset,args=(ini_replica1,ini_cpus1,))
+        mn2reset=threading.Thread(target=mn2.reset,args=(ini_replica2,ini_cpus2,))
+        mn1reset.start()
+        mn2reset.start()
+        mn1reset.join()
+        mn2reset.join()
         # init model
-        # prepare first state
+        
         # start workload
         url = "http://" + IP + ":8000/replicas" +str(mn1.replica)
         workload.start(url,request_detail,mn2.replica,0,epoch)
@@ -41,8 +48,9 @@ if __name__ =='__main__':
                 
                 if timestamp == (real_run):
                     done = True
-                # get state info by disk, remember to stop for at least 2 second because dpcker stats delay 
-                time.sleep(2)
+                # get state info by disk, remember to stop for docker stats delay(about 2second) 
+                cpu_mn1.join()
+                cpu_mn2.join()
 
 
                 # get state
@@ -61,21 +69,28 @@ if __name__ =='__main__':
                     agent_mn2.print_step(step,next_state_2,reward_2,reward_perf_2,reward_res_2,done)
                     if not test:
                         agent_mn1.step(next_state_1,reward_1,done)
+                        agent_mn1.model.epsilon_decay()
                         agent_mn2.step(next_state_2,reward_2,done)
+                        agent_mn2.model.epsilon_decay()
 
                 
                
                 if (not done):
-                    # create action by ne w state 
-                    action_1=agent_mn1.act(next_state_1)
+                    # create action according new state 
+                    act1_replicas,act1_cpus=agent_mn1.act(next_state_1)
+                    act2_replicas,act2_cpus=agent_mn2.act(next_state_2)
                     # env action
-                    mn1.action(action_1)
+                    # mn1.action(action_1)
+                    # mn2.action(action_2)
+                    # scaling part of the dokcer so slow use thread to improve the scaling time
+                    mn1action=threading.Thread(target=mn1.action,args=(act1_replicas,act1_cpus,))
+                    mn2action=threading.Thread(target=mn2.action,args=(act2_replicas,act2_cpus,))
+                    mn1action.start()
+                    mn2action.start()
                     # assign state value to previous state value
+                    mn1action.join()
+                    mn2action.join()
                     agent_mn1.next()
-                    action_2=agent_mn2.act(next_state_2)
-                    # env action
-                    mn2.action(action_2)
-                    # assign state value to previous state value
                     agent_mn2.next()
                     step+=1
                     # start workload
@@ -94,7 +109,7 @@ if __name__ =='__main__':
                 response_time_list_1.append(mn1.save_reponse_time(timestamp))
                 response_time_list_2.append(mn2.save_reponse_time(timestamp))
                 
-            # store resource message
+            # the timer tick 
             time.sleep(1)
     
     workload.stop()

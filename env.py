@@ -32,7 +32,11 @@ class env():
         self.t_max=t_max
         self.w_perf = w_perf
         self.w_res = w_res
-    def reset(self,replicas,cpus):
+    def reset(self,replicas:int,cpus:float):
+        '''
+        reset the envorinment to the given setting, the env will first been sscaled to 0,
+        after that scale to the given repilcas and set the cpus  
+        '''
         self.replica = replicas
         self.cpus = cpus
         self.state[0] = self.replica
@@ -42,11 +46,11 @@ class env():
             "sudo docker-machine ssh default docker service update --replicas 0 "+self.service_name+"-1",
             "sudo docker-machine ssh default docker service update --replicas 0 "+self.service_name+"-2",
             "sudo docker-machine ssh default docker service update --replicas 0 "+self.service_name+"-3",
-            "sudo docker-machine ssh default docker service update --replicas " + str(1)+" " +self.service_name+"-1",
+            "sudo docker-machine ssh default docker service update --replicas " + str(self.replica)+" " +self.service_name+"-1",
             "sudo docker-machine ssh default docker service update --limit-cpu " + str(cpus)+" "  + self.service_name+"-1",
-            "sudo docker-machine ssh default docker service update --replicas " + str(1) +" " +self.service_name+"-2",
+            "sudo docker-machine ssh default docker service update --replicas " + str(self.replica) +" " +self.service_name+"-2",
             "sudo docker-machine ssh default docker service update --limit-cpu " + str(cpus)+" "  + self.service_name+"-2",
-            "sudo docker-machine ssh default docker service update --replicas " + str(1)+" "  +self.service_name+"-3",
+            "sudo docker-machine ssh default docker service update --replicas " + str(self.replica)+" "  +self.service_name+"-3",
             "sudo docker-machine ssh default docker service update --limit-cpu " + str(cpus) +" " + self.service_name+"-3",
         ]
         def execute_command(cmd):
@@ -56,28 +60,34 @@ class env():
             print(cmd)
             # print(result)
         return self.state
-    def action(self,action):
+    def action(self,replica,cpus):
         '''
-        deal with the output of the model (action), and save the action in the self parameter
-        action: the output of the model 
+        deal with the output of the model (replica,cpus), and save the action in the self parameter
+        replica: scale repilas of the environment to the this number 
+        cpus: set cpus of the environment to the this number
         '''
-        if action != '0':
-            action_replica = action[0]
-            action_cpus = action[1][action_replica][0]#action[1]
-            self.replica = action_replica + 1  # 0 1 2 (index)-> 1 2 3 (replica)
-            self.cpus = round(action_cpus, 2)
+        # if action != '0':
+        action_replica = int(replica)#action[0]
+        action_cpus = float(cpus)#action[1][action_replica][0]#action[1]
+        self.replica = action_replica + 1  # 0 1 2 (index)-> 1 2 3 (replica)
+        self.cpus = round(action_cpus, 2)
         # scale, But for docker stable 3 containers have aready built, all we need to do is send to different proxy port 
         cmd2 = "sudo docker-machine ssh default docker service update --limit-cpu " + str(self.cpus) + " " + self.service_name
         print(self.service_name+' replica= '+str(self.replica)+' cpus= '+str(self.cpus))
         for i in range(self.replica):
             print(self.service_name+"-"+str(i+1)+' cpu')
             returned_text = subprocess.check_output(cmd2+"-"+str(i+1), shell=True)
-            time.sleep(1)
+            
         
         time.sleep(1)  # wait service start
 
         print ("scale the server resource")
     def save_cpu_usage(self,timestamp:int):
+        '''
+        Save the container's cpu usage data from docker stats to disk, 
+        it has a drawback, the resolution (2 seconds) of the docker stats 
+        makes this function works pretty slow.  
+        '''
         cmd = "sudo docker-machine ssh " + self.worker_name + " docker stats --no-stream --format \\\"{{ json . }}\\\" "
         returned_text = subprocess.check_output(cmd, shell=True)
         my_data = returned_text.decode('utf8')
@@ -99,6 +109,10 @@ class env():
                 f.close()
         # print ("cpu usage") 
     def save_reponse_time(self,timestamp:int):
+        '''
+        Save the container's response time data to disk, 
+        we use the simple request to tick the server and get the response time  
+        '''
         path1 = self.result_dir + self.service_name + "_response.txt"
         f1 = open(path1, 'a')
         
@@ -120,6 +134,10 @@ class env():
         # print ("response time")  
         return response_time
     def get_cpu_utilization_from_data(self):
+        '''
+        Get the last five env cpu usages dataset from disk, 
+        and this function will check self.replica to import matching files
+        '''
         path:list= [self.result_dir + self.service_name + '-1_cpu.txt',
                     self.result_dir + self.service_name + '-2_cpu.txt',
                     self.result_dir + self.service_name + '-3_cpu.txt']
@@ -142,6 +160,10 @@ class env():
         last_avg_cpu=statistics.mean(last_avg_cpu)
         return last_avg_cpu
     def get_state(self,response_time_list:list):
+        '''
+        return the current state of enviornment, anf the reward from previous action
+        ( because this environment need time to see the outcome), the reward function is a lot can be improve
+        '''
         # calculate the response time mean, if one is timeout then all seem as timeout
         if self.timeout_setting not in response_time_list:
             mean_response_time = statistics.mean(response_time_list)

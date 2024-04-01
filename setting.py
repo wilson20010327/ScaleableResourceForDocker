@@ -23,14 +23,14 @@ request_detail={
     'dymax': dymax,
     'dymin': dymin
 }
-test= False
-result_dir = "./result/test_2/" #
+test= True
+result_dir = "./result/static10/evaluation1/" #
 
-epochs= 2 #8
+epochs= 8 #8
 if test :
     epochs=1 ###
-menitor_period= 10 #30
-simulate_time= 20 #3600
+menitor_period= 30 #30
+simulate_time= 3600 #3600
 real_run=simulate_time+menitor_period
 
 ini_replica1, ini_cpus1, ini_replica2, ini_cpus2 = 1, 1, 1, 1
