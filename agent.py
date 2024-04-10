@@ -61,10 +61,10 @@ class agent():
     def next(self):
         self.action_prev=self.action
         self.state_prev=self.state
-    def pad_action(self,act, act_param):
-        params = [np.zeros((1,), dtype=np.float32), np.zeros((1,), dtype=np.float32), np.zeros((1,), dtype=np.float32)]
-        params[act][:] = act_param
-        return (act, params)
+    # def pad_action(self,act, act_param):
+    #     params = [np.zeros((1,), dtype=np.float32), np.zeros((1,), dtype=np.float32), np.zeros((1,), dtype=np.float32)]
+    #     params[act][:] = act_param
+    #     return (act, params)
     def act (self,state):
         # output action
         self.state=state

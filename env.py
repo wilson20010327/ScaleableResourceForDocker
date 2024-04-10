@@ -21,6 +21,7 @@ class env():
         self.state = [self.replica, 0, self.cpus, 0] # replica / cpu utiliation / cpus / response time
         self.n_state = len(self.state)
         self.n_actions = len(self.action_space)
+        self.response_time_list=[]
         self.step_cpu_utilization = []
         self.step_rt = []
         # # two service url
@@ -132,6 +133,7 @@ class env():
         if str(response) != '200':
             response_time = self.timeout_setting
         # print ("response time")  
+        self.response_time_list.append(response_time)
         return response_time
     def get_cpu_utilization_from_data(self):
         '''
@@ -159,12 +161,14 @@ class env():
             print('cant open')
         last_avg_cpu=statistics.mean(last_avg_cpu)
         return last_avg_cpu
-    def get_state(self,response_time_list:list):
+    def get_state(self):
         '''
         return the current state of enviornment, anf the reward from previous action
         ( because this environment need time to see the outcome), the reward function is a lot can be improve
         '''
         # calculate the response time mean, if one is timeout then all seem as timeout
+        response_time_list=self.response_time_list[:]
+        self.response_time_list=[]
         if self.timeout_setting not in response_time_list:
             mean_response_time = statistics.mean(response_time_list)
             mean_response_time = mean_response_time*1000  # 0.05s -> 50ms

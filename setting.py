@@ -6,13 +6,14 @@ import threading
 import numpy as np
 import datetime
 print(datetime.datetime.now())
-
+test= True
+result_dir = "./result/static80-prime20000/evaluation/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
 IP1 = "192.168.99.103"  # app_mn2
 # request rate r
-data_rate = 10 #120     # if not use_tm
+data_rate = 80 #120     # if not use_tm
 ifdynamic=False
 dymean=data_rate
 dymax=100
@@ -23,9 +24,6 @@ request_detail={
     'dymax': dymax,
     'dymin': dymin
 }
-test= True
-result_dir = "./result/static10/evaluation1/" #
-
 epochs= 8 #8
 if test :
     epochs=1 ###
