@@ -1,13 +1,14 @@
 import time,os
 from sendrequest import workloadcreater
-from env import env
+# from env import env
+from simulator import simulate_env
 from agent import agent
 import threading
 import numpy as np
 import datetime
 print(datetime.datetime.now())
-test= True
-result_dir = "./result/static80-prime20000/evaluation/" #
+test= False
+result_dir = "./result/theory1/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
@@ -24,7 +25,7 @@ request_detail={
     'dymax': dymax,
     'dymin': dymin
 }
-epochs= 8 #8
+epochs= 3 #8
 if test :
     epochs=1 ###
 menitor_period= 30 #30

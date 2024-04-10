@@ -3,7 +3,7 @@ import numpy as np
 import utility.env_service as env_service
 class env():
     def __init__(self,worker_name:str,service_name:str,IP:str,IP1:str,result_dir:str,
-                 timeout_setting:int,t_max:int,w_perf:float,w_res:float):
+                 timeout_setting:float,t_max:int,w_perf:float,w_res:float):
         '''
         worker_name: the cluster name service locate
         service_name: indicate the service name

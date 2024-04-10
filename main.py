@@ -1,9 +1,10 @@
 from setting import *
 
 if __name__ =='__main__':
-    workload=workloadcreater(requestResultFolderPath)
-    mn1=env('worker','app_mn1',IP,IP1,result_dir,timeout_setting,Tmax_mn1,w_perf,w_res)
-    mn2=env('worker1','app_mn2',IP,IP1,result_dir,timeout_setting,Tmax_mn2,w_perf,w_res)
+    # workload=workloadcreater(requestResultFolderPath)
+    mn1=simulate_env('worker','app_mn1',result_dir,timeout_setting,Tmax_mn1,w_perf,w_res)
+    mn2=simulate_env('worker1','app_mn2',result_dir,timeout_setting,Tmax_mn2,w_perf,w_res)
+    
     agent_mn1=agent(result_dir,'app_mn1',mn1.n_state,mn1.n_actions,test)
     agent_mn2=agent(result_dir,'app_mn2',mn2.n_state,mn2.n_actions,test)
     agent_mn1.set_model(epsilon_initial,batch_size,gamma
@@ -33,22 +34,15 @@ if __name__ =='__main__':
         # init model
         
         # start workload
-        url = "http://" + IP + ":8000/replicas" +str(mn1.replica)
-        workload.start(url,request_detail,mn2.replica,0,epoch)
+        # url = "http://" + IP + ":8000/replicas" +str(mn1.replica)
+        # workload.start(url,request_detail,mn2.replica,0,epoch)
         done = False
         for timestamp in range(1,real_run+1):
             print('timestamp: ', timestamp)
             if timestamp % menitor_period ==0 :
-                # stop workload
-                workload.stop()
-                
                 if timestamp == (real_run):
                     done = True
-                # get state info by disk, remember to stop for docker stats delay(about 2second) 
-                cpu_mn1.join()
-                cpu_mn2.join()
-
-
+                
                 # get state
                 next_state_1, reward_1, reward_perf_1, reward_res_1 =mn1.get_state()
                 next_state_2, reward_2, reward_perf_2, reward_res_2 =mn2.get_state()
@@ -88,26 +82,15 @@ if __name__ =='__main__':
                     agent_mn1.next()
                     agent_mn2.next()
                     step+=1
-                    # start workload
-                    url = "http://" + IP + ":8000/replicas" +str(mn1.replica)
-                    workload.start(url,request_detail,mn2.replica,timestamp,epoch)
-               
-            
+                    
             # get the cpu usage from docker stats too slow need to use thread
-            cpu_mn1=threading.Thread(target=mn1.save_cpu_usage,args=(timestamp,))
-            cpu_mn2=threading.Thread(target=mn2.save_cpu_usage,args=(timestamp,))
-            cpu_mn1.start()
-            cpu_mn2.start()
             if timestamp % menitor_period >= menitor_period-5:
-                # how to determine the amount of supervise response time
-                # tick to server make env save response time
-                mn1.save_reponse_time(timestamp)
-                mn2.save_reponse_time(timestamp)
+                mn1.get_resource(timestamp,request_detail['data_rate'])
+                mn2.get_resource(timestamp,request_detail['data_rate'])
                 
             # the timer tick 
             time.sleep(1)
     
-    workload.stop()
     if (not test):
         agent_mn1.model.save_models(result_dir + agent_mn1.service_name + "_" + str(seed))
         agent_mn2.model.save_models(result_dir + agent_mn2.service_name + "_" + str(seed))
