@@ -39,20 +39,13 @@ class simulate_env:
         self.w_perf = w_perf
         self.w_res = w_res
     def reset(self,replicas:int,cpus:float):
-        '''
-        reset the envorinment to the given setting, the env will first been sscaled to 0,
-        after that scale to the given repilcas and set the cpus  
-        '''
+        
         self.replica = replicas
         self.cpus = cpus
         self.state[0] = self.replica
         self.state[2] = self.cpus
     def action(self,replica,cpus):
-        '''
-        deal with the output of the model (replica,cpus), and save the action in the self parameter
-        replica: scale repilas of the environment to the this number 
-        cpus: set cpus of the environment to the this number
-        '''
+        
         # if action != '0':
         action_replica = int(replica)#action[0]
         action_cpus = float(cpus)#action[1][action_replica][0]#action[1]
@@ -61,11 +54,7 @@ class simulate_env:
 
         print ("scale the server resource")
     def save_cpu_usage(self,timestamp:int, inputRateTps):
-        '''
-        Save the container's cpu usage data from docker stats to disk, 
-        it has a drawback, the resolution (2 seconds) of the docker stats 
-        makes this function works pretty slow.  
-        '''
+        
         self.servetimemean=1/float(self.cpus*200)
         lambdaTps = inputRateTps/self.replica
         rho = lambdaTps * self.servetimemean
@@ -77,10 +66,7 @@ class simulate_env:
         return rho
         
     def save_reponse_time(self,timestamp:int, inputRateTps,rho):
-        '''
-        Save the container's response time data to disk, 
-        we use the simple request to tick the server and get the response time  
-        '''
+        
         r=0.0
         if (rho >= 1.0) :
             r= self.timeout_setting
@@ -123,13 +109,13 @@ class simulate_env:
         
         
         # use moving average to smooth the value
-        self.step_cpu_utilization.append(relative_cpu_utilization)
-        self.step_rt.append(Rt)
-        if len(self.step_cpu_utilization) == 4:
-            relative_cpu_utilization = statistics.mean(self.step_cpu_utilization)
-            Rt = statistics.mean(self.step_rt)
-            self.step_cpu_utilization.pop(0)
-            self.step_rt.pop(0)
+        # self.step_cpu_utilization.append(relative_cpu_utilization)
+        # self.step_rt.append(Rt)
+        # if len(self.step_cpu_utilization) == 4:
+        #     relative_cpu_utilization = statistics.mean(self.step_cpu_utilization)
+        #     Rt = statistics.mean(self.step_rt)
+        #     self.step_cpu_utilization.pop(0)
+        #     self.step_rt.pop(0)
         
 
         T_upper=self.timeout_setting*1000

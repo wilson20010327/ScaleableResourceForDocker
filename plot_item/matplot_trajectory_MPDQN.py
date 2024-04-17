@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore', category=MatplotlibDeprecationWarning)
 
 
 
-tmp_dir = "result/static80-prime20000/evaluation/"
+tmp_dir = "result/theory_dynamic_removearverage82/evaluation5/"
 path1 = tmp_dir + "/app_mn1_trajectory.txt"
 path2 = tmp_dir + "/app_mn2_trajectory.txt"
 

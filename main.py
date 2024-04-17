@@ -1,5 +1,5 @@
 from setting import *
-
+request_plot=[]
 if __name__ =='__main__':
     # workload=workloadcreater(requestResultFolderPath)
     mn1=simulate_env('worker','app_mn1',result_dir,timeout_setting,Tmax_mn1,w_perf,w_res)
@@ -22,6 +22,7 @@ if __name__ =='__main__':
                         ,action_input_layer,seed
                         )
     step=0
+    
     for epoch in range (epochs):
         # reset env
         # make the scaling process pipline to increate the efficiency 
@@ -32,7 +33,7 @@ if __name__ =='__main__':
         mn1reset.join()
         mn2reset.join()
         # init model
-        
+        prev=0
         # start workload
         # url = "http://" + IP + ":8000/replicas" +str(mn1.replica)
         # workload.start(url,request_detail,mn2.replica,0,epoch)
@@ -42,7 +43,7 @@ if __name__ =='__main__':
             if timestamp % menitor_period ==0 :
                 if timestamp == (real_run):
                     done = True
-                
+                prev=0
                 # get state
                 next_state_1, reward_1, reward_perf_1, reward_res_1 =mn1.get_state()
                 next_state_2, reward_2, reward_perf_2, reward_res_2 =mn2.get_state()
@@ -85,13 +86,37 @@ if __name__ =='__main__':
                     
             # get the cpu usage from docker stats too slow need to use thread
             if timestamp % menitor_period >= menitor_period-5:
-                mn1.get_resource(timestamp,request_detail['data_rate'])
-                mn2.get_resource(timestamp,request_detail['data_rate'])
                 
+                request_num=request_detail['data_rate']
+                
+                if (request_detail['ifdynamic']):
+                    def fluctuate_function_sin(prev,x, mean=data_rate, max_value=dymax, min_value=dymin,func_num=func_num):
+                        x=int(x/5)
+                        temp=0
+                        # for i in range(func_num):
+                        #     temp+=mean + (max_value - min_value) / 2 * math.sin((i+1)*x)
+                        # temp/=func_num
+                        temp=min_value + (max_value - min_value)*random.random()
+                        if (prev==0):
+                            return temp
+                        else:
+                            return prev
+                    prev=request_num=int(fluctuate_function_sin(prev,int(timestamp/30)))
+                mn1.get_resource(timestamp,request_num)
+                mn2.get_resource(timestamp,int(request_num*0.2))
+                request_plot.append(request_num)
             # the timer tick 
-            time.sleep(1)
+            # time.sleep(1)
     
     if (not test):
         agent_mn1.model.save_models(result_dir + agent_mn1.service_name + "_" + str(seed))
         agent_mn2.model.save_models(result_dir + agent_mn2.service_name + "_" + str(seed))
     print(datetime.datetime.now())
+
+    x=[i for i in range(len(request_plot))]
+    plt.plot(x, request_plot)
+    plt.xlabel('time')
+    plt.ylabel('request num')
+    plt.savefig(result_dir+"request_plot.jpg")
+    plt.show()
+    
