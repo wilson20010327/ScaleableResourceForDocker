@@ -1,31 +1,33 @@
-import time,os
+import time,os,random
 from sendrequest import workloadcreater
 # from env import env
 from simulator import simulate_env
 from agent import agent
 import threading
 import numpy as np
-import datetime
+import datetime,math
 print(datetime.datetime.now())
-test= False
-result_dir = "./result/theory1/" #
+test= True
+result_dir = "./result/theory_dynamic_morerandom82/evaluation200/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
 IP1 = "192.168.99.103"  # app_mn2
 # request rate r
-data_rate = 80 #120     # if not use_tm
+data_rate = 200 #120     # if not use_tm
 ifdynamic=False
 dymean=data_rate
-dymax=100
+dymax=160
 dymin=5
+func_num=5
 request_detail={
     'data_rate': data_rate,
     'ifdynamic': ifdynamic,
     'dymax': dymax,
-    'dymin': dymin
+    'dymin': dymin,
+    'func_num':func_num
 }
-epochs= 3 #8
+epochs= 8 #8
 if test :
     epochs=1 ###
 menitor_period= 30 #30
@@ -99,6 +101,7 @@ settings = {
     'ifdynamic': ifdynamic,
     'dymax': str(dymax),
     'dymin': str(dymin),
+    'func_num':str(func_num),
     'Tmax_mn1': Tmax_mn1,
     'Tmax_mn2': Tmax_mn2,
     'simulate_time': simulate_time,
