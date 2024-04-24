@@ -48,11 +48,11 @@ def array_min2d(x):
 
 
 class Memory(object):
-    def __init__(self, limit, observation_shape, action_shape, next_actions=False):
+    def __init__(self, limit, observation_shape, action_shape, next_actions=False, dtype='float32'):
         self.limit = limit
 
         self.states = RingBuffer(limit, shape=observation_shape)
-        self.actions = RingBuffer(limit, shape=action_shape)
+        self.actions = RingBuffer(limit, shape=action_shape,dtype=dtype)
         self.rewards = RingBuffer(limit, shape=(1,))
         self.next_states = RingBuffer(limit, shape=observation_shape)
         self.next_actions = RingBuffer(limit, shape=action_shape) if next_actions else None

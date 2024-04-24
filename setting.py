@@ -2,19 +2,20 @@ import time,os,random
 from sendrequest import workloadcreater
 # from env import env
 from simulator import simulate_env
-from agent import agent
+# from agent import agent
+from model.dqn import Agent
 import threading
 import numpy as np
 import datetime,math
 print(datetime.datetime.now())
 test= True
-result_dir = "./result/theory_dynamic_morerandom82/evaluation200/" #
+result_dir = "./result/DQN_dynamic/evaluation200/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
 IP1 = "192.168.99.103"  # app_mn2
 # request rate r
-data_rate = 200 #120     # if not use_tm
+data_rate = 200#120     # if not use_tm
 ifdynamic=False
 dymean=data_rate
 dymax=160

@@ -13,13 +13,13 @@ class simulate_env:
         '''
         self.worker_name=worker_name
         self.service_name = service_name
-        self.cpus = 1
+        self.cpus = 1.0
         self.replica = 1
         self.cpu_utilization = 0.0
-        self.action_space = ['1', '1', '1']
+        # self.action_space = ['1', '1', '1']
         self.state = [self.replica, 0, self.cpus, 0] # replica / cpu utiliation / cpus / response time
         self.n_state = len(self.state)
-        self.n_actions = len(self.action_space)
+        self.n_actions = 5 # None cpus +0.1 -0.1  replicas +1 -1 
         self.response_time_list=[]
         self.cpu_utilization_list=[]
         self.step_cpu_utilization = []
@@ -44,15 +44,23 @@ class simulate_env:
         self.cpus = cpus
         self.state[0] = self.replica
         self.state[2] = self.cpus
-    def action(self,replica,cpus):
-        
-        # if action != '0':
-        action_replica = int(replica)#action[0]
-        action_cpus = float(cpus)#action[1][action_replica][0]#action[1]
-        self.replica = action_replica + 1  # 0 1 2 (index)-> 1 2 3 (replica)
-        self.cpus = round(action_cpus, 2)
-
+    def action(self,idx):
+        # None cpus +0.1 -0.1  replicas +1 -1 
         print ("scale the server resource")
+        table=[0,0.1,-0.1,1,-1]
+        if (idx==0) :return 
+        if (idx<=2):
+            temp=self.cpus+ table[int(idx)]
+            if (temp>0.7 and temp<=1):
+                self.cpus=round(temp, 2)
+                return 
+            return 
+        else:
+            temp=self.replica +table[int(idx)]
+            if (temp>0 and temp<=3):
+                self.replica=temp
+                return 
+            return 
     def save_cpu_usage(self,timestamp:int, inputRateTps):
         
         self.servetimemean=1/float(self.cpus*200)
