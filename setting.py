@@ -7,19 +7,20 @@ from model.dqn import Agent
 import threading
 import numpy as np
 import datetime,math
+import matplotlib.pyplot as plt
 print(datetime.datetime.now())
 test= True
-result_dir = "./result/DQN_dynamic/evaluation200/" #
+result_dir = "./result/DQN_dynamic100_300/evaluation/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
 IP1 = "192.168.99.103"  # app_mn2
 # request rate r
-data_rate = 200#120     # if not use_tm
-ifdynamic=False
+data_rate = 300#120     # if not use_tm
+ifdynamic=True
 dymean=data_rate
-dymax=160
-dymin=5
+dymax=300
+dymin=100
 func_num=5
 request_detail={
     'data_rate': data_rate,

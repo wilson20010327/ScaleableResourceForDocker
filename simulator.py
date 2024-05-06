@@ -84,7 +84,7 @@ class simulate_env:
             r = self.servetimemean  + lambdaTps/2.0*es2/(1.0-rho)
         path1 = self.result_dir + self.service_name + "_response.txt"
         f1 = open(path1, 'a')
-        data1 = str(timestamp) + ' '+ str(r) + ' ' + str(self.cpus) + ' ' + str(self.replica) + '\n'
+        data1 = str(timestamp) + ' '+ str(r) + ' ' + str(self.cpus) + ' ' + str(self.replica)+" " + str(inputRateTps)+'\n'
         f1.write(data1)
         f1.close()
         return r    
@@ -114,16 +114,17 @@ class simulate_env:
         self.cpu_utilization_list=[]
         # change the absolute percentage to relative percentage
         relative_cpu_utilization = self.cpu_utilization / 100 / self.cpus # get cpu usage
-        
+        relative_cpu_utilization = round( relative_cpu_utilization,8)
+        Rt=round(Rt,8)
         
         # use moving average to smooth the value
-        self.step_cpu_utilization.append(relative_cpu_utilization)
-        self.step_rt.append(Rt)
-        if len(self.step_cpu_utilization) == 4:
-            relative_cpu_utilization = statistics.mean(self.step_cpu_utilization)
-            Rt = statistics.mean(self.step_rt)
-            self.step_cpu_utilization.pop(0)
-            self.step_rt.pop(0)
+        # self.step_cpu_utilization.append(relative_cpu_utilization)
+        # self.step_rt.append(Rt)
+        # if len(self.step_cpu_utilization) == 4:
+        #     relative_cpu_utilization = statistics.mean(self.step_cpu_utilization)
+        #     Rt = statistics.mean(self.step_rt)
+        #     self.step_cpu_utilization.pop(0)
+        #     self.step_rt.pop(0)
         
 
         T_upper=self.timeout_setting*1000

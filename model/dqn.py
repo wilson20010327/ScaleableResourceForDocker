@@ -57,7 +57,7 @@ class Agent():
         self.state=[]
     def next(self):
         self.action_prev=np.array(self.action, dtype=np.int32).item()     
-        self.state_prev=np.array(self.state, dtype=np.float32).squeeze(0).tolist()     
+        self.state_prev=list(np.array(self.state, dtype=np.float32).squeeze(0))   
         pass   
     def select_action(self,state,env=None):
         global steps_done

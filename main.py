@@ -1,5 +1,5 @@
 from setting import *
-
+request_plot=[]
 if __name__ =='__main__':
     # workload=workloadcreater(requestResultFolderPath)
     mn1=simulate_env('worker','app_mn1',result_dir,timeout_setting,Tmax_mn1,w_perf,w_res)
@@ -38,7 +38,7 @@ if __name__ =='__main__':
                 # Covert np.float32
                 next_state_1 = np.array(next_state_1, dtype=np.float32)
                 next_state_2 = np.array(next_state_2, dtype=np.float32)
-
+                
                 # model update
                 if int(timestamp/menitor_period)>1:
                     agent_mn1.print_step(step,next_state_1,reward_1,reward_perf_1,reward_res_1,done)
@@ -78,10 +78,8 @@ if __name__ =='__main__':
                     def fluctuate_function_sin(prev,x, mean=data_rate, max_value=dymax, min_value=dymin,func_num=func_num):
                         x=int(x/5)
                         temp=0
-                        # for i in range(func_num):
-                        #     temp+=mean + (max_value - min_value) / 2 * math.sin((i+1)*x)
-                        # temp/=func_num
                         temp=min_value + (max_value - min_value)*random.random()
+                        # temp=min_value+(max_value - min_value)*x/24
                         if (prev==0):
                             return temp
                         else:
@@ -89,7 +87,7 @@ if __name__ =='__main__':
                     prev=request_num=int(fluctuate_function_sin(prev,int(timestamp/30)))
                 mn1.get_resource(timestamp,request_num)
                 mn2.get_resource(timestamp,int(request_num*0.2))
-                
+                request_plot.append(request_num)
             # the timer tick 
             # time.sleep(1)
     
@@ -97,3 +95,10 @@ if __name__ =='__main__':
         agent_mn1.save_model(result_dir + agent_mn1.service_name + "_" + str(seed))
         agent_mn2.save_model(result_dir + agent_mn2.service_name + "_" + str(seed))
     print(datetime.datetime.now())
+
+    x=[i for i in range(len(request_plot))]
+    plt.plot(x, request_plot)
+    plt.xlabel('time')
+    plt.ylabel('request num')
+    plt.savefig(result_dir+"request_plot.jpg")
+    plt.show()
