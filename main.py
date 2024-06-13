@@ -30,7 +30,10 @@ if __name__ =='__main__':
             if timestamp % menitor_period ==0 :
                 if timestamp == (real_run):
                     done = True
-                prev=0
+                request_plot.append(request_num)
+                if timestamp % (menitor_period*5)==0: 
+                    prev=0
+                
                 # get state
                 next_state_1, reward_1, reward_perf_1, reward_res_1 =mn1.get_state()
                 next_state_2, reward_2, reward_perf_2, reward_res_2 =mn2.get_state()
@@ -78,16 +81,17 @@ if __name__ =='__main__':
                     def fluctuate_function_sin(prev,x, mean=data_rate, max_value=dymax, min_value=dymin,func_num=func_num):
                         x=int(x/5)
                         temp=0
-                        temp=min_value + (max_value - min_value)*random.random()
+                        temp=mean + (max_value - min_value) / 2 * math.sin(x)
                         # temp=min_value+(max_value - min_value)*x/24
                         if (prev==0):
+                            
                             return temp
                         else:
                             return prev
                     prev=request_num=int(fluctuate_function_sin(prev,int(timestamp/30)))
                 mn1.get_resource(timestamp,request_num)
                 mn2.get_resource(timestamp,int(request_num*0.2))
-                request_plot.append(request_num)
+                
             # the timer tick 
             # time.sleep(1)
     

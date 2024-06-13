@@ -16,6 +16,7 @@ class simulate_env:
         self.cpus = 1.0
         self.replica = 1
         self.cpu_utilization = 0.0
+        self.scale=0
         # self.action_space = ['1', '1', '1']
         self.state = [self.replica, 0, self.cpus, 0] # replica / cpu utiliation / cpus / response time
         self.n_state = len(self.state)
@@ -47,6 +48,7 @@ class simulate_env:
     def action(self,idx):
         # None cpus +0.1 -0.1  replicas +1 -1 
         print ("scale the server resource")
+        self.scale=0
         table=[0,0.1,-0.1,1,-1]
         if (idx==0) :return 
         if (idx<=2):
@@ -59,6 +61,7 @@ class simulate_env:
             temp=self.replica +table[int(idx)]
             if (temp>0 and temp<=3):
                 self.replica=temp
+                self.scale=1
                 return 
             return 
     def save_cpu_usage(self,timestamp:int, inputRateTps):
@@ -66,6 +69,7 @@ class simulate_env:
         self.servetimemean=1/float(self.cpus*200)
         lambdaTps = inputRateTps/self.replica
         rho = lambdaTps * self.servetimemean
+        if (rho*100>100) :rho=1.0
         path1 = self.result_dir + self.service_name + "_cpu.txt"
         f1 = open(path1, 'a')
         data1 = str(timestamp) + ' '+ str(rho*100)+ ' ' + str(self.replica)  + '\n'
@@ -117,40 +121,27 @@ class simulate_env:
         relative_cpu_utilization = round( relative_cpu_utilization,8)
         Rt=round(Rt,8)
         
-        # use moving average to smooth the value
-        # self.step_cpu_utilization.append(relative_cpu_utilization)
-        # self.step_rt.append(Rt)
-        # if len(self.step_cpu_utilization) == 4:
-        #     relative_cpu_utilization = statistics.mean(self.step_cpu_utilization)
-        #     Rt = statistics.mean(self.step_rt)
-        #     self.step_cpu_utilization.pop(0)
-        #     self.step_rt.pop(0)
-        
 
-        T_upper=self.timeout_setting*1000
-        B = np.log(1+0.5)/((T_upper-self.t_max)/self.t_max) # time constant
-        c_delay = np.where(Rt <= self.t_max, 0, np.exp(B * (Rt - self.t_max) / self.t_max) - 0.5)
-        
+        # T_upper=self.timeout_setting*1000
+        # B = np.log(1+0.5)/((T_upper-self.t_max)/self.t_max) # time constant
+        # c_delay = np.where(Rt <= self.t_max, 0, np.exp(B * (Rt - self.t_max) / self.t_max) - 0.5)
+        c_delay=0
+        if(Rt>self.t_max): c_delay=1
         # cpu_utilization cost
 
-        if relative_cpu_utilization > 0.8:
-            x1 = 0.8 # the max cpu usage we want it learn
-            x2 = 1.0 # the max cpu it can use
-            y1 = self.t_max
-            y2 = T_upper
-
-            clip_relative_cpu_utilization = min(relative_cpu_utilization, 1)
-            map_utilization = (clip_relative_cpu_utilization - x1) * ((y2 - y1) / (x2 - x1)) + self.t_max
-            c_utilization = np.exp(B * (map_utilization - self.t_max) / self.t_max) - 0.5
+        if relative_cpu_utilization >0.9:
+            c_utilization = 1
         else:
             c_utilization = 0
         
         # calculate the reward
         # c_perf = max(c_delay, c_utilization)
+        c_scale=self.scale
         c_perf = c_delay+ c_utilization
-
+        
         # resource cost
-        c_res = (self.replica*self.cpus)/3   # replica*self.cpus / Kmax
+        # c_res = (self.replica*self.cpus)/3   # replica*self.cpus / Kmax
+        c_res=c_utilization<0.4
         next_state = []
         # # k, u, c # r
 

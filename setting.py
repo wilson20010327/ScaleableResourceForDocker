@@ -10,13 +10,13 @@ import datetime,math
 import matplotlib.pyplot as plt
 print(datetime.datetime.now())
 test= True
-result_dir = "./result/DQN_dynamic100_300/evaluation/" #
+result_dir = "./result/DQN_100_300_newR3_sin/evaluation/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
 IP1 = "192.168.99.103"  # app_mn2
 # request rate r
-data_rate = 300#120     # if not use_tm
+data_rate = 150#120     # if not use_tm
 ifdynamic=True
 dymean=data_rate
 dymax=300
