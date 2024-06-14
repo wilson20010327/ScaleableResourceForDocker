@@ -98,7 +98,7 @@ def simplerequest():
                     is_prime[j] = False
         return [x for x in range(2, n + 1) if is_prime[x]]
     if(random.random()<reportRate):
-        mode = data.get('mode', 'replicas1')
+        mode = data.get('mode', 'replicas1') #get mode if not coentent in json return replicas1
         temp=mn_2url+mode+'/simplerequest'
         response = requests.post(temp, json=data)
         response=response.status_code

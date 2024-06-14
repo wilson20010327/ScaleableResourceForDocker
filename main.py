@@ -1,6 +1,7 @@
 from setting import *
 
 if __name__ =='__main__':
+    plot_data=[]
     workload=workloadcreater(requestResultFolderPath)
     mn1=env('worker','app_mn1',IP,IP1,result_dir,timeout_setting,Tmax_mn1,w_perf,w_res)
     mn2=env('worker1','app_mn2',IP,IP1,result_dir,timeout_setting,Tmax_mn2,w_perf,w_res)
@@ -35,6 +36,7 @@ if __name__ =='__main__':
         # start workload
         url = "http://" + IP + ":8000/replicas" +str(mn1.replica)
         workload.start(url,request_detail,mn2.replica,0,epoch)
+        plot_data.append(request_detail['data_rate'][0])
         done = False
         for timestamp in range(1,real_run+1):
             print('timestamp: ', timestamp)
@@ -91,6 +93,7 @@ if __name__ =='__main__':
                     # start workload
                     url = "http://" + IP + ":8000/replicas" +str(mn1.replica)
                     workload.start(url,request_detail,mn2.replica,timestamp,epoch)
+                    plot_data.append(request_detail['data_rate'][timestamp])
                
             
             # get the cpu usage from docker stats too slow need to use thread
@@ -112,3 +115,5 @@ if __name__ =='__main__':
         agent_mn1.model.save_models(result_dir + agent_mn1.service_name + "_" + str(seed))
         agent_mn2.model.save_models(result_dir + agent_mn2.service_name + "_" + str(seed))
     print(datetime.datetime.now())
+    plt.plot(plot_data)
+    plt.show()

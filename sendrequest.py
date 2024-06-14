@@ -8,7 +8,7 @@ class workloadcreater:
               replica:int, timestamp:int,episode:int,):
         self.active=True
         filename=self.requestResultFolderPath+str(episode)+"_"+str(timestamp)+".html"
-        data_rate=request_detail['data_rate']
+        data_rate=request_detail['data_rate'][timestamp]
         print("request start  "+ str(data_rate))
         locustWorkloadCreator.startTask(url,data_rate,data_rate,replica,filename)
         

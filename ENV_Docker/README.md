@@ -1,4 +1,17 @@
 # DRL Scalable Computer Resource
+## Setup 
+1. [Download dockermachine, create three docker machine and group a docker swarm](https://hackmd.io/3w5OdQ__Tre7Guy5hT-vmg)
+2. Copy docker-compose-mn1.yml and docker-compose-mn2.yml into docker swarm master
+3. Enter docker swarm master(in our project we set the 'default' as master) run service command 
+```=shell
+sudo docker-machine ssh default
+docker stack deploy --compose-file docker-compose-mn2.yml app 
+docker stack deploy --compose-file docker-compose-mn1.yml app 
+```
+4. Check whether server is setup successfully in browser<br>
+("serverIP":"port"/replica"number"/webpage)<br>
+http://192.168.99.102:8000/replicas3/webpage<br>
+http://192.168.99.103:8001/replicas3/webpage<br>
 ## Structure (Two level)
 ### Mn_1 : handle user's request (simple web server)
 * Set the port in docker-compose.yml (default: 5000)

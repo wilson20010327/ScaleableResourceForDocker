@@ -5,9 +5,10 @@ from agent import agent
 import threading
 import numpy as np
 import datetime
+import matplotlib.pyplot as plt
 print(datetime.datetime.now())
-test= True
-result_dir = "./result/static80-prime20000/evaluation/" #
+test= False
+result_dir = "./flask_result/test/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
@@ -18,6 +19,14 @@ ifdynamic=False
 dymean=data_rate
 dymax=100
 dymin=5
+data_rate=[]
+count=0
+with open("request.txt", "r") as f:
+    while(1):
+        data_rate.append(int(f.readline()))
+        count+=1
+        if (count>=10000):
+            break
 request_detail={
     'data_rate': data_rate,
     'ifdynamic': ifdynamic,
