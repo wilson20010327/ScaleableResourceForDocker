@@ -3,7 +3,7 @@ import numpy as np
 import utility.env_service as env_service
 class env():
     def __init__(self,worker_name:str,service_name:str,IP:str,IP1:str,result_dir:str,
-                 timeout_setting:int,t_max:int,w_perf:float,w_res:float):
+                 timeout_setting:int,t_max:int,w_perf:float,w_res:float,mp:bool=True):
         '''
         worker_name: the cluster name service locate
         service_name: indicate the service name
@@ -21,6 +21,8 @@ class env():
         self.state = [self.replica, 0, self.cpus, 0] # replica / cpu utiliation / cpus / response time
         self.n_state = len(self.state)
         self.n_actions = len(self.action_space)
+        if not mp:
+            self.n_actions = 5 # None cpus +0.1 -0.1  replicas +1 -1 
         self.response_time_list=[]
         self.step_cpu_utilization = []
         self.step_rt = []
@@ -33,6 +35,7 @@ class env():
         self.t_max=t_max
         self.w_perf = w_perf
         self.w_res = w_res
+        self.mp=mp
     def reset(self,replicas:int,cpus:float):
         '''
         reset the envorinment to the given setting, the env will first been sscaled to 0,
@@ -61,28 +64,46 @@ class env():
             print(cmd)
             # print(result)
         return self.state
-    def action(self,replica,cpus):
+    def action(self,replica,cpus=0):
         '''
         deal with the output of the model (replica,cpus), and save the action in the self parameter
         replica: scale repilas of the environment to the this number 
         cpus: set cpus of the environment to the this number
         '''
         # if action != '0':
-        action_replica = int(replica)#action[0]
-        action_cpus = float(cpus)#action[1][action_replica][0]#action[1]
-        self.replica = action_replica + 1  # 0 1 2 (index)-> 1 2 3 (replica)
-        self.cpus = round(action_cpus, 2)
-        # scale, But for docker stable 3 containers have aready built, all we need to do is send to different proxy port 
-        cmd2 = "sudo docker-machine ssh default docker service update --limit-cpu " + str(self.cpus) + " " + self.service_name
-        print(self.service_name+' replica= '+str(self.replica)+' cpus= '+str(self.cpus))
-        for i in range(self.replica):
-            print(self.service_name+"-"+str(i+1)+' cpu')
-            returned_text = subprocess.check_output(cmd2+"-"+str(i+1), shell=True)
+        if self.mp:#mpdqn
+            action_replica = int(replica)#action[0]
+            action_cpus = float(cpus)#action[1][action_replica][0]#action[1]
+            self.replica = action_replica + 1  # 0 1 2 (index)-> 1 2 3 (replica)
+            self.cpus = round(action_cpus, 2)
+            # scale, But for docker stable 3 containers have aready built, all we need to do is send to different proxy port 
+            cmd2 = "sudo docker-machine ssh default docker service update --limit-cpu " + str(self.cpus) + " " + self.service_name
+            for i in range(self.replica):
+                print(self.service_name+"-"+str(i+1)+' cpu')
+                returned_text = subprocess.check_output(cmd2+"-"+str(i+1), shell=True)
+                
             
-        
-        time.sleep(1)  # wait service start
-
-        print ("scale the server resource")
+            time.sleep(1)  # wait service start
+        else:#dqn
+            idx=replica
+            table=[0,0.1,-0.1,1,-1]
+            if (idx==0) : 
+                pass
+            if (idx<=2):
+                temp=self.cpus+ table[int(idx)]
+                if (temp>0.7 and temp<=1):
+                    self.cpus=round(temp, 2)
+                    cmd2 = "sudo docker-machine ssh default docker service update --limit-cpu " + str(self.cpus) + " " + self.service_name
+                    
+                    for i in range(self.replica):
+                        print(self.service_name+"-"+str(i+1)+' cpu')
+                        returned_text = subprocess.check_output(cmd2+"-"+str(i+1), shell=True) 
+            else:
+                temp=self.replica +table[int(idx)]
+                if (temp>0 and temp<=3):
+                    self.replica=temp 
+        print (self.service_name+" scale the server resource")
+        print(self.service_name+' replica= '+str(self.replica)+' cpus= '+str(self.cpus))
     def save_cpu_usage(self,timestamp:int):
         '''
         Save the container's cpu usage data from docker stats to disk, 
@@ -126,7 +147,7 @@ class env():
         except requests.exceptions.Timeout:
             response = "timeout"
             response_time = self.timeout_setting
-
+        response_time=round(response_time,2)
         data1 = str(timestamp) + ' ' + str(response) + ' ' + str(response_time) + ' ' + str(self.cpus) + ' ' + str(self.replica) + '\n'
         f1.write(data1)
         f1.close()
@@ -190,31 +211,43 @@ class env():
             self.step_cpu_utilization.pop(0)
             self.step_rt.pop(0)
         
-
-        T_upper=self.timeout_setting*1000
-        B = np.log(1+0.5)/((T_upper-self.t_max)/self.t_max) # time constant
-        c_delay = np.where(Rt <= self.t_max, 0, np.exp(B * (Rt - self.t_max) / self.t_max) - 0.5)
-        
+        c_delay=0
+        if(Rt>=self.t_max): c_delay=1
         # cpu_utilization cost
 
-        if relative_cpu_utilization > 0.8:
-            x1 = 0.8 # the max cpu usage we want it learn
-            x2 = 1.0 # the max cpu it can use
-            y1 = self.t_max
-            y2 = T_upper
-
-            clip_relative_cpu_utilization = min(relative_cpu_utilization, 1)
-            map_utilization = (clip_relative_cpu_utilization - x1) * ((y2 - y1) / (x2 - x1)) + self.t_max
-            c_utilization = np.exp(B * (map_utilization - self.t_max) / self.t_max) - 0.5
+        if relative_cpu_utilization >0.9:
+            c_utilization = 1
         else:
             c_utilization = 0
         
         # calculate the reward
         # c_perf = max(c_delay, c_utilization)
+        
         c_perf = c_delay+ c_utilization
+        
+        # resource cost
+        # c_res = (self.replica*self.cpus)/3   # replica*self.cpus / Kmax
+        c_res=c_utilization<0.4
+        # cpu_utilization cost
+
+        # if relative_cpu_utilization > 0.8:
+        #     x1 = 0.8 # the max cpu usage we want it learn
+        #     x2 = 1.0 # the max cpu it can use
+        #     y1 = self.t_max
+        #     y2 = T_upper
+
+        #     clip_relative_cpu_utilization = min(relative_cpu_utilization, 1)
+        #     map_utilization = (clip_relative_cpu_utilization - x1) * ((y2 - y1) / (x2 - x1)) + self.t_max
+        #     c_utilization = np.exp(B * (map_utilization - self.t_max) / self.t_max) - 0.5
+        # else:
+        #     c_utilization = 0
+        
+        # calculate the reward
+        # c_perf = max(c_delay, c_utilization)
+        # c_perf = c_delay+ c_utilization
 
         # resource cost
-        c_res = (self.replica*self.cpus)/3   # replica*self.cpus / Kmax
+        # c_res = (self.replica*self.cpus)/3   # replica*self.cpus / Kmax
         next_state = []
         # # k, u, c # r
 

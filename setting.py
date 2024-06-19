@@ -1,24 +1,25 @@
 import time,os
 from sendrequest import workloadcreater
 from env import env
-from agent import agent
+from model.MPDQN import agent
+from model.dqn import Agent
 import threading
 import numpy as np
 import datetime
 import matplotlib.pyplot as plt
 print(datetime.datetime.now())
 test= False
-result_dir = "./flask_result/test/" #
+result_dir = "./flask_result/newRewardDQN/" #
 # Need modify ip if ip change
 # check cmd : sudo docker-machine ls
 IP = "192.168.99.102"  # app_mn1
 IP1 = "192.168.99.103"  # app_mn2
 # request rate r
-data_rate = 80 #120     # if not use_tm
-ifdynamic=False
-dymean=data_rate
-dymax=100
-dymin=5
+data_rate = 80 #120     # no use
+ifdynamic=False         # no use 
+dymean=data_rate        # no use 
+dymax=100               # no use 
+dymin=5                 # no use 
 data_rate=[]
 count=0
 with open("request.txt", "r") as f:

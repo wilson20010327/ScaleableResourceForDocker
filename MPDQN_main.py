@@ -116,4 +116,7 @@ if __name__ =='__main__':
         agent_mn2.model.save_models(result_dir + agent_mn2.service_name + "_" + str(seed))
     print(datetime.datetime.now())
     plt.plot(plot_data)
+    plt.xlabel('time')
+    plt.ylabel('request num')
+    plt.savefig(result_dir+"request_plot.jpg")
     plt.show()
