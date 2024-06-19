@@ -6,8 +6,9 @@ if __name__ =='__main__':
     mn2=env('worker1','app_mn2',IP,IP1,result_dir,timeout_setting,Tmax_mn2,w_perf,w_res,False)
     
     agent_mn1=Agent('app_mn1',mn1.n_state,mn1.n_actions,128,result_dir,not test)
+    agent_mn1.set_parameter(batch_size,gamma,epsilon_initial,epsilon_final,epsilon_steps,tau_actor,learning_rate_actor)
     agent_mn2=Agent('app_mn2',mn2.n_state,mn2.n_actions,128,result_dir,not test)
-    
+    agent_mn2.set_parameter(batch_size,gamma,epsilon_initial,epsilon_final,epsilon_steps,tau_actor,learning_rate_actor)
     step=0
     
     for epoch in range (epochs):

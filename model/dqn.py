@@ -45,9 +45,8 @@ class Agent():
         self.Q_optimiser = optim.Adam(self.Q.parameters(), lr=self.learning_rate_Q) 
         # self.actor_param_optimiser = optim.Adam(self.actor_param.parameters(), lr=self.learning_rate_actor_param) 
         self.loss_func=F.mse_loss
-
-        self.memory=Memory(replay_memory_size, (n_observations,), (1,), next_actions=False,dtype='int64')
         self.batch_size=batch_size
+        self.memory=Memory(replay_memory_size, (n_observations,), (1,), next_actions=False,dtype='int64')
         self._step = 0
         self._episode = 0
         self.updates =0
@@ -55,6 +54,16 @@ class Agent():
         self.action_prev=0
         self.action=0
         self.state=[]
+    def set_parameter(self,batch_size,gamma,epsilon_initial,epsilon_final,epsilon_steps,tau,learning_rate):
+        global BATCH_SIZE,GAMMA,EPS_START,EPS_END,EPS_DECAY,TAU,LR
+        self.batch_size=batch_size
+        BATCH_SIZE = batch_size
+        GAMMA = gamma
+        EPS_START = epsilon_initial
+        EPS_END = epsilon_final
+        EPS_DECAY = epsilon_steps
+        TAU = tau
+        LR = learning_rate
     def next(self):
         self.action_prev=np.array(self.action, dtype=np.int32).item()     
         self.state_prev=list(np.array(self.state, dtype=np.float32).squeeze(0))   
